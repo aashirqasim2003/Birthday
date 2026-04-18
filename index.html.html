@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday Nimmi 🎁</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #0a0a0f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Starfield ── */
+  canvas#stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── Screen 1: Hero ── */
+  #screen-hero {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    animation: fadeInUp 1.4s ease both;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: #c9a96e;
+    opacity: 0.8;
+  }
+
+  .title-nimmi {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3.5rem, 10vw, 8rem);
+    font-weight: 700;
+    background: linear-gradient(135deg, #f5e6c8 0%, #c9a96e 40%, #f5e6c8 70%, #a07840 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    filter: drop-shadow(0 0 40px rgba(201,169,110,0.3));
+  }
+
+  .title-hb {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1rem, 3vw, 1.6rem);
+    font-weight: 400;
+    font-style: italic;
+    color: #c9a96e;
+    letter-spacing: 0.1em;
+    opacity: 0.9;
+  }
+
+  .divider {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c9a96e, transparent);
+  }
+
+  .gift-btn {
+    margin-top: 10px;
+    padding: 14px 38px;
+    background: transparent;
+    border: 1px solid rgba(201,169,110,0.5);
+    color: #c9a96e;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .gift-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(201,169,110,0.08);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .gift-btn:hover::before { transform: scaleX(1); }
+  .gift-btn:hover { border-color: #c9a96e; letter-spacing: 0.4em; }
+
+  /* ── Popup Overlay ── */
+  #popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  #popup-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .popup-box {
+    background: #0e0e16;
+    border: 1px solid rgba(201,169,110,0.25);
+    padding: 50px 55px;
+    text-align: center;
+    max-width: 440px;
+    width: 90%;
+    position: relative;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  .popup-icon { font-size: 3.5rem; margin-bottom: 16px; display: block; }
+  .popup-q {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: #f5e6c8;
+    margin-bottom: 8px;
+  }
+  .popup-sub {
+    font-size: 0.8rem;
+    color: rgba(201,169,110,0.6);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 36px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    position: relative;
+    min-height: 52px;
+  }
+
+  .popup-yes, .popup-no {
+    padding: 13px 36px;
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+  }
+
+  .popup-yes {
+    background: rgba(201,169,110,0.12);
+    border-color: #c9a96e;
+    color: #c9a96e;
+  }
+  .popup-yes:hover { background: rgba(201,169,110,0.22); }
+
+  .popup-no {
+    background: transparent;
+    border-color: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.4);
+    position: absolute;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .popup-no:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
+
+  .ok-emoji {
+    display: none;
+    font-size: 1.4rem;
+    color: #c9a96e;
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+    margin-top: 10px;
+    animation: fadeInUp 0.4s ease both;
+  }
+
+  .no-msg {
+    display: none;
+    font-size: 0.75rem;
+    color: rgba(255,180,80,0.7);
+    margin-top: 12px;
+    letter-spacing: 0.1em;
+    animation: shake 0.4s ease;
+  }
+
+  /* ── Wishes Screen ── */
+  #screen-wishes {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #0a0a0f;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+  }
+  #screen-wishes.show { display: flex; }
+
+  .wishes-header {
+    padding: 40px 24px 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .wishes-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    background: linear-gradient(135deg, #f5e6c8, #c9a96e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+  .wishes-sub {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: rgba(201,169,110,0.5);
+    text-transform: uppercase;
+  }
+  .wishes-divider {
+    width: 80px; height: 1px;
+    background: linear-gradient(90deg, transparent, #c9a96e, transparent);
+    margin: 16px auto 0;
+  }
+
+  .wishes-scroll {
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
+    padding: 20px 24px 60px;
+    scroll-behavior: smooth;
+  }
+  .wishes-scroll::-webkit-scrollbar { width: 4px; }
+  .wishes-scroll::-webkit-scrollbar-track { background: transparent; }
+  .wishes-scroll::-webkit-scrollbar-thumb { background: rgba(201,169,110,0.25); border-radius: 2px; }
+
+  .wishes-grid {
+    max-width: 700px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .wish-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(201,169,110,0.07);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .wish-item.visible { opacity: 1; transform: translateY(0); }
+
+  .wish-num {
+    font-size: 0.65rem;
+    color: rgba(201,169,110,0.35);
+    letter-spacing: 0.1em;
+    min-width: 28px;
+    padding-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .wish-text {
+    font-size: 0.92rem;
+    color: rgba(245,230,200,0.85);
+    line-height: 1.65;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+  }
+  .wish-emoji {
+    font-size: 1rem;
+    min-width: 24px;
+  }
+
+  /* ── Floating petals ── */
+  .petal {
+    position: fixed;
+    pointer-events: none;
+    z-index: 5;
+    font-size: 1rem;
+    animation: floatDown linear infinite;
+    opacity: 0.4;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  @keyframes floatDown {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 0.4; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+  @keyframes flyIn {
+    from { opacity: 0; transform: scale(0) rotate(-10deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<!-- Screen 1: Hero -->
+<div id="screen-hero">
+  <span class="subtitle">A Special Gift For</span>
+  <h1 class="title-nimmi">Nimmi</h1>
+  <div class="divider"></div>
+  <p class="title-hb">Happy Birthday, beautiful soul ✨</p>
+  <button class="gift-btn" onclick="openPopup()">Open Your Gift &nbsp;🎁</button>
+</div>
+
+<!-- Popup -->
+<div id="popup-overlay">
+  <div class="popup-box">
+    <span class="popup-icon">🎁</span>
+    <p class="popup-q">Do you want to open your gift?</p>
+    <p class="popup-sub">A hundred wishes await inside</p>
+    <div class="btn-row" id="btn-row">
+      <button class="popup-yes" id="yes-btn" onclick="clickYes()">Yes ✨</button>
+      <button class="popup-no" id="no-btn" onclick="clickNo()">No</button>
+    </div>
+    <div class="ok-emoji" id="ok-msg">😄 ok ok... now click <strong>Yes</strong>!</div>
+    <div class="no-msg" id="no-msg">You have to click Yes! 💛</div>
+  </div>
+</div>
+
+<!-- Screen 2: Wishes -->
+<div id="screen-wishes">
+  <div class="wishes-header">
+    <p class="wishes-sub">🎂 &nbsp; With all the love &nbsp; 🎂</p>
+    <h2 class="wishes-title">100 Wishes for Nimmi</h2>
+    <div class="wishes-divider"></div>
+  </div>
+  <div class="wishes-scroll" id="wishes-scroll">
+    <div class="wishes-grid" id="wishes-grid"></div>
+  </div>
+</div>
+
+<script>
+// ── Stars ──
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function resize() {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+for (let i = 0; i < 160; i++) {
+  stars.push({
+    x: Math.random() * innerWidth,
+    y: Math.random() * innerHeight,
+    r: Math.random() * 1.2 + 0.2,
+    a: Math.random(),
+    speed: Math.random() * 0.4 + 0.1,
+    dir: Math.random() > 0.5 ? 1 : -1
+  });
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    s.a += s.speed * 0.01 * s.dir;
+    if (s.a > 1 || s.a < 0) s.dir *= -1;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(201,169,110,${s.a * 0.7})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+// ── Popup ──
+function openPopup() {
+  document.getElementById('popup-overlay').classList.add('show');
+  positionNoBtn();
+}
+
+let noClicked = false;
+let runCount = 0;
+
+function positionNoBtn() {
+  const btn = document.getElementById('no-btn');
+  btn.style.position = 'absolute';
+  btn.style.right = '0px';
+  btn.style.top = '0px';
+  btn.style.left = 'auto';
+}
+
+function clickNo() {
+  noClicked = true;
+  const msg = document.getElementById('no-msg');
+  const btn = document.getElementById('no-btn');
+  msg.style.display = 'block';
+  msg.style.animation = 'none';
+  setTimeout(() => msg.style.animation = 'shake 0.4s ease', 10);
+  setTimeout(() => msg.style.display = 'none', 2000);
+}
+
+function runAway(btn) {
+  const row = document.getElementById('btn-row');
+  const rowRect = row.getBoundingClientRect();
+  const boxRect = row.parentElement.getBoundingClientRect();
+
+  runCount++;
+  const corners = [
+    { top: 0, left: 0 },
+    { top: 0, right: 0, left: 'auto' },
+    { bottom: 0, left: 0, top: 'auto' },
+    { bottom: 0, right: 0, left: 'auto', top: 'auto' }
+  ];
+  const c = corners[runCount % corners.length];
+
+  btn.style.transition = 'all 0.25s cubic-bezier(0.34,1.4,0.64,1)';
+  Object.assign(btn.style, { top: '', left: '', right: '', bottom: '' });
+  Object.assign(btn.style, c);
+
+  if (runCount >= 2) {
+    const ok = document.getElementById('ok-msg');
+    ok.style.display = 'block';
+    ok.style.animation = 'none';
+    setTimeout(() => ok.style.animation = 'fadeInUp 0.4s ease both', 10);
+    btn.style.display = 'none'; // hide no btn after 2 runs
+  }
+}
+
+document.getElementById('yes-btn').addEventListener('mouseenter', function() {
+  // Make no button run away on yes hover (fun trick — no btn runs, not yes)
+});
+
+document.getElementById('no-btn').addEventListener('mouseenter', function() {
+  runAway(this);
+});
+
+function clickYes() {
+  document.getElementById('popup-overlay').classList.remove('show');
+  launchWishes();
+}
+
+// ── Wishes ──
+const wishes = [
+  ["🌸", "May every morning greet you with warmth and a reason to smile."],
+  ["💛", "Wishing you a year filled with beautiful surprises around every corner."],
+  ["✨", "May your heart always find peace even in the loudest of days."],
+  ["🌙", "Here's to you — a person who makes the world softer just by being in it."],
+  ["🎶", "May every song you love play at exactly the right moment."],
+  ["🌿", "Wishing you growth that feels gentle, not rushed."],
+  ["💌", "May kindness find its way back to you a hundredfold."],
+  ["🕯️", "Here's to the quiet joys — tea, sunsets, and the people you love."],
+  ["🌺", "May your days bloom the way flowers do — slowly, beautifully, fully."],
+  ["🦋", "Wishing you the courage to become exactly who you're meant to be."],
+  ["🌟", "May the universe conspire endlessly in your favor."],
+  ["💎", "You are rare and precious — never forget that, Nimmi."],
+  ["🎁", "May this year give you everything you forgot to wish for."],
+  ["🌈", "After every difficult season, may your rainbow arrive on time."],
+  ["🍃", "Wishing you rest that actually restores your soul."],
+  ["💫", "May your laughter echo in rooms long after you've left."],
+  ["🌊", "Here's to flowing through life with grace and resilience."],
+  ["🎀", "May every birthday feel like the universe wrapping you in a hug."],
+  ["🕊️", "Wishing you freedom from every worry that no longer serves you."],
+  ["🌙", "May your nights be peaceful and your dreams be vivid."],
+  ["🍰", "Here's to more cake, more joy, and more reasons to celebrate you."],
+  ["💐", "May people treat you the way you deserve — gently and with love."],
+  ["🌠", "Wishing you the kind of clarity that comes after a long exhale."],
+  ["🎵", "May your life have a soundtrack you actually love."],
+  ["🌻", "Here's to your warmth — the kind that lights up entire rooms."],
+  ["✨", "Wishing you moments that remind you just how magical life can be."],
+  ["💝", "May love find you in all the forms you need it most."],
+  ["🌸", "Here's to your softness — it is strength, not weakness."],
+  ["🍀", "May good luck follow you the way your shadow does."],
+  ["🎯", "Wishing you the clarity to pursue exactly what sets your soul on fire."],
+  ["🌿", "May this year teach you something beautiful about yourself."],
+  ["💛", "Here's to the friendships that feel like home — may you always have them."],
+  ["🌙", "Wishing you the kind of sleep that heals and the kind of mornings that inspire."],
+  ["🎶", "May music always find you when words can't."],
+  ["🌺", "Here's to your beauty — both the kind the world sees and the kind it doesn't."],
+  ["💫", "Wishing you adventures that become your favorite stories."],
+  ["🦋", "May every ending in your life make room for something even better."],
+  ["🕯️", "Here's to your light — please keep shining it."],
+  ["🌟", "Wishing you a heart full and a mind at ease."],
+  ["🎁", "May every door that closes lead you to a garden instead."],
+  ["🌈", "Here's to the version of you that's still becoming — she's extraordinary."],
+  ["💎", "Wishing you confidence in your own worth, every single day."],
+  ["🍃", "May the people in your life deserve the love you give them."],
+  ["💌", "Here's to letters, messages, and moments that make you feel seen."],
+  ["🌊", "Wishing you the wisdom to know your own depth."],
+  ["🎀", "May your birthday mark the start of your most beautiful chapter yet."],
+  ["🕊️", "Here's to peace — in your mind, in your heart, in your home."],
+  ["🌠", "Wishing you starry nights when life feels too heavy to hold."],
+  ["🌻", "May your roots grow deeper even as your branches stretch higher."],
+  ["💐", "Here's to being celebrated not just today, but every single day."],
+  ["✨", "Wishing you the magic of believing in yourself completely."],
+  ["🌸", "May your good days outnumber your hard ones by far."],
+  ["💛", "Here's to abundance — of love, of laughter, of everything good."],
+  ["🎵", "Wishing you a life as rich and layered as your favorite melody."],
+  ["🍀", "May fortune smile on every dream you dare to dream."],
+  ["🌿", "Here's to healing — quiet, steady, and on your own timeline."],
+  ["🌙", "Wishing you moonlit moments that remind you of your own mystery."],
+  ["💝", "May every person who loves you show it in ways you can feel."],
+  ["🎯", "Here's to knowing what you want and going after it fearlessly."],
+  ["🌺", "Wishing you the kind of happiness that doesn't need explaining."],
+  ["💫", "May this birthday mark a turning point toward everything wonderful."],
+  ["🦋", "Here's to transformation — the kind that feels like finally coming home."],
+  ["🕯️", "Wishing you warmth in winter, shade in summer, and always — someone who cares."],
+  ["🌟", "May every version of you be proud of the one standing here today."],
+  ["🎁", "Here's to gifts that can't be wrapped — health, joy, belonging, peace."],
+  ["🌈", "Wishing you color in every grey moment."],
+  ["💎", "May you never shrink yourself for anyone, ever again."],
+  ["🍃", "Here's to growing in directions you haven't even imagined yet."],
+  ["💌", "Wishing you words that arrive at exactly the moment you need them."],
+  ["🌊", "May you ride every wave with a little more grace each time."],
+  ["🎀", "Here's to you — the whole beautiful, complicated, wonderful you."],
+  ["🕊️", "Wishing you a year without unnecessary guilt or undeserved doubt."],
+  ["🌠", "May shooting stars actually work for you — make a thousand wishes."],
+  ["🌻", "Here's to your joy — pure, unbothered, and entirely your own."],
+  ["💐", "Wishing you flowers that last longer than the occasion."],
+  ["✨", "May magic become a recurring theme in your everyday life."],
+  ["🌸", "Here's to softness as strength — you've always had it."],
+  ["💛", "Wishing you golden moments that you carry in your heart for years."],
+  ["🎵", "May your voice — in every form — always be heard."],
+  ["🍀", "Here's to luck finding you even when you've stopped looking."],
+  ["🌿", "Wishing you stillness that feels like a gift, not an absence."],
+  ["🌙", "May tonight feel like a celebration you actually deserve."],
+  ["💝", "Here's to loving yourself the way those who truly know you do."],
+  ["🎯", "Wishing you the bravery to start again whenever you need to."],
+  ["🌺", "May beauty find you in unexpected places — always."],
+  ["💫", "Here's to your sparkle — may it never dim."],
+  ["🦋", "Wishing you wings strong enough to carry every dream you hold."],
+  ["🕯️", "May every candle you blow out be followed by a year of light."],
+  ["🌟", "Here's to Nimmi — brilliant, beloved, and absolutely one of a kind."],
+  ["🎁", "Wishing you a year that exceeds every expectation you dared to set."],
+  ["🌈", "May your story always end in color, never grey."],
+  ["💎", "Here's to knowing your worth without anyone else's permission."],
+  ["🍃", "Wishing you chapters of your life so beautiful they take your breath away."],
+  ["💌", "May every day feel like it was written just for you."],
+  ["🌊", "Here's to riding the ocean of life with your head held high."],
+  ["🎀", "Wishing you all the love this little world can possibly hold — and then some."],
+  ["🕊️", "May peace be your companion, joy your destination, and love your home."],
+  ["🌠", "Happy Birthday, Nimmi. The sky has brighter stars because you're in this world. 🌟"],
+];
+
+function launchWishes() {
+  const screen = document.getElementById('screen-wishes');
+  screen.classList.add('show');
+  screen.style.animation = 'fadeInUp 0.8s ease both';
+
+  // spawn petals
+  const petals = ['🌸','✨','🌺','💛','🌟','💫','🎀'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = petals[Math.floor(Math.random() * petals.length)];
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (Math.random() * 8 + 6) + 's';
+    p.style.animationDelay = (Math.random() * 5) + 's';
+    p.style.fontSize = (Math.random() * 0.8 + 0.7) + 'rem';
+    screen.appendChild(p);
+  }
+
+  const grid = document.getElementById('wishes-grid');
+  grid.innerHTML = '';
+
+  wishes.forEach((w, i) => {
+    const div = document.createElement('div');
+    div.className = 'wish-item';
+    div.innerHTML = `
+      <span class="wish-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="wish-emoji">${w[0]}</span>
+      <span class="wish-text">${w[1]}</span>
+    `;
+    grid.appendChild(div);
+  });
+
+  // Intersection observer for stagger animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), 50);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.wish-item').forEach(el => observer.observe(el));
+}
+</script>
+</body>
+</html>
