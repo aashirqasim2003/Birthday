@@ -192,7 +192,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
   scroll-behavior:smooth;
   /* lock scroll until disclaimer accepted */
 }
-.ws-scroll.locked{overflow-y:hidden;pointer-events:none;}
+/* scroll lock handled via JS inline style */
 .ws-scroll::-webkit-scrollbar{width:3px;}
 .ws-scroll::-webkit-scrollbar-thumb{background:rgba(232,201,126,0.18);border-radius:2px;}
 .ws-inner{max-width:640px;margin:0 auto;}
@@ -203,6 +203,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
   border-bottom:1px solid rgba(232,201,126,0.1);
   margin-bottom:4px;
   text-align:left;
+  opacity:1 !important;
+  transform:none !important;
 }
 .intro-blk p{
   font-family:'Cormorant Garamond',serif;
@@ -457,7 +459,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
     <div class="wh-title">For My Nimmi</div>
     <div class="wh-line"></div>
   </div>
-  <div class="ws-scroll locked" id="ws-scroll">
+  <div class="ws-scroll" id="ws-scroll" style="overflow-y:hidden;pointer-events:none;">
     <div class="ws-inner" id="ws-inner"></div>
   </div>
 </div>
@@ -583,9 +585,11 @@ function openDisc(){
 }
 function startWishes(){
   document.getElementById('disclaimer-overlay').style.display='none';
-  document.getElementById('ws-scroll').classList.remove('locked');
+  const scr=document.getElementById('ws-scroll');
+  scr.classList.remove('locked');
   startFW(8000);spawnPetals();
-  setupObservers();
+  // Small delay so DOM is fully rendered before observing
+  setTimeout(setupObservers,150);
 }
 
 /* ═══ WISHES DATA ═══ */
@@ -780,14 +784,13 @@ function buildWishes(){
   inner.appendChild(fin);
 }
 
-/* ═══ PICK OPTION (food/travel) ═══ */
-let scrollLocked=false;
-
+/* ═══ PICK OPTION ═══ */
 function pickOpt(id,i){
+  const scr=document.getElementById('ws-scroll');
   const opt=spopupsData[id][i];
+  document.querySelectorAll(`#${id} .sp-opt`).forEach(b=>b.disabled=true);
+
   if(opt.isMakkah){
-    // Hide sp3 choices area, show Makkah card
-    document.querySelectorAll(`#${id} .sp-opt`).forEach(b=>b.disabled=true);
     const res=document.getElementById(id+'-res');
     const ico=document.getElementById(id+'-ico');
     const txt=document.getElementById(id+'-txt');
@@ -796,66 +799,86 @@ function pickOpt(id,i){
     txt.innerHTML='<em style="color:var(--gold)">Scroll down for something very special… 💛</em>';
     res.style.display='block';
     cont.style.display='block';
-    // Reveal the Makkah card
+    // Unlock scroll
+    scr.style.overflowY='auto';
+    scr.style.pointerEvents='auto';
     setTimeout(()=>{
       const card=document.getElementById('makkah-card');
-      card.classList.add('show');
       card.style.display='block';
       boom();boom();boom();
-      setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'center'}),200);
+      setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),200);
     },600);
     return;
   }
+
   const res=document.getElementById(id+'-res');
   const ico=document.getElementById(id+'-ico');
   const txt=document.getElementById(id+'-txt');
   const cont=document.getElementById(id+'-cont');
   ico.textContent=opt.emoji;
   txt.textContent=opt.text;
-  res.style.display='block';cont.style.display='block';
-  document.querySelectorAll(`#${id} .sp-opt`).forEach(b=>b.disabled=true);
+  res.style.display='block';
+  cont.style.display='block';
+  // Unlock scroll
+  scr.style.overflowY='auto';
+  scr.style.pointerEvents='auto';
   boom();boom();
 }
 
-/* ═══ SCROLL LOCK UNTIL SELECTION ═══ */
+/* ═══ SCROLL LOCK + OBSERVERS ═══ */
 function setupObservers(){
   const scr=document.getElementById('ws-scroll');
 
-  // For each popup, lock scroll until an option is chosen
-  ['sp1','sp2','sp3'].forEach(id=>{
-    const popup=document.getElementById(id);
-    if(!popup)return;
-    const sentinel=popup.previousElementSibling;
-    if(!sentinel)return;
-
-    // When popup is in view, lock scroll
-    const popObs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>{
-        if(e.isIntersecting && !popup.classList.contains('seen')){
-          popup.classList.add('seen');
-          popup.classList.add('show');
-          boom();
-          // Lock scroll
-          scr.classList.add('locked');
-          // Unlock when user picks option
-          const unlock=()=>{
-            scr.classList.remove('locked');
-          };
-          popup.querySelectorAll('.sp-opt').forEach(btn=>{
-            btn.addEventListener('click',unlock,{once:true});
-          });
-          popObs.unobserve(e.target);
-        }
-      });
-    },{threshold:0.7,root:scr});
-    popObs.observe(sentinel);
+  // Immediately make already-visible .w-row elements visible
+  document.querySelectorAll('.w-row').forEach(el=>{
+    const rect=el.getBoundingClientRect();
+    const scrRect=scr.getBoundingClientRect();
+    if(rect.top < scrRect.bottom && rect.bottom > scrRect.top){
+      el.classList.add('vis');
+    }
   });
 
-  // Wish rows fade in
+  // Fade-in observer for wish rows (use document viewport, not scroll root)
   const wObs=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('vis'),60);wObs.unobserve(e.target);}});
-  },{threshold:0.08,root:scr});
-  document.querySelectorAll('.w-row').forEach(el=>wObs.observe(el));
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        setTimeout(()=>e.target.classList.add('vis'),60);
+        wObs.unobserve(e.target);
+      }
+    });
+  },{threshold:0.08});
+  document.querySelectorAll('.w-row:not(.vis)').forEach(el=>wObs.observe(el));
+
+  // Scroll event — check if any popup should appear
+  const popupIds=['sp1','sp2','sp3'];
+  function checkPopups(){
+    popupIds.forEach(id=>{
+      const popup=document.getElementById(id);
+      if(!popup||popup.classList.contains('seen'))return;
+      const rect=popup.getBoundingClientRect();
+      const scrRect=scr.getBoundingClientRect();
+      // Show popup when it enters the scroll viewport
+      if(rect.top < scrRect.bottom - 40 && rect.bottom > scrRect.top){
+        popup.classList.add('seen','show');
+        boom();boom();
+        // Lock scroll
+        scr.style.overflowY='hidden';
+        scr.style.pointerEvents='none';
+        popup.style.pointerEvents='all';
+        // Re-enable pointer events on popup buttons
+        popup.querySelectorAll('.sp-opt').forEach(btn=>{
+          btn.style.pointerEvents='all';
+          btn.addEventListener('click',()=>{
+            scr.style.overflowY='auto';
+            scr.style.pointerEvents='auto';
+          },{once:true});
+        });
+      }
+    });
+  }
+  scr.addEventListener('scroll',checkPopups,{passive:true});
+  // Also check immediately in case popup is already in view
+  checkPopups();
 }
 </script>
 </body>
