@@ -136,10 +136,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
    DISCLAIMER OVERLAY
 ══════════════════════════════════════ */
 #disclaimer-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);
-  z-index:250;display:none;align-items:center;justify-content:center;padding:20px;
+  position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);
+  z-index:400;display:none;align-items:center;justify-content:center;padding:20px;
 }
-#disclaimer-overlay.show{display:flex;}
 .disc-box{
   background:linear-gradient(135deg,#110720 0%,#1c0f32 100%);
   border:1px solid rgba(232,201,126,0.3);
@@ -448,7 +447,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
       <strong style="color:var(--gold)">The last one is the most special of all.</strong> 💛
     </div>
     <div class="disc-note">✨ &nbsp; scroll until the very end &nbsp; ✨</div>
-    <button class="disc-btn" onclick="startWishes()">I Promise, Let's Go 🌸</button>
+    <button class="disc-btn" onclick="startWishes()">Got it, Let's Go 🌸</button>
   </div>
 </div>
 
@@ -578,18 +577,18 @@ function openDisc(){
   document.getElementById('screen-hero').style.display='none';
   buildWishes();
   document.getElementById('screen-wishes').classList.add('show');
-  setTimeout(()=>{
-    document.getElementById('disclaimer-overlay').classList.add('show');
-    document.getElementById('disclaimer-overlay').style.display='flex';
-  },300);
+  // Show disclaimer on top
+  const disc=document.getElementById('disclaimer-overlay');
+  disc.style.display='flex';
 }
 function startWishes(){
-  document.getElementById('disclaimer-overlay').style.display='none';
+  const disc=document.getElementById('disclaimer-overlay');
+  disc.style.display='none';
   const scr=document.getElementById('ws-scroll');
-  scr.classList.remove('locked');
-  startFW(8000);spawnPetals();
-  // Small delay so DOM is fully rendered before observing
-  setTimeout(setupObservers,150);
+  scr.style.overflowY='auto';
+  scr.style.pointerEvents='auto';
+  startFW(8000); spawnPetals();
+  setTimeout(setupObservers,200);
 }
 
 /* ═══ WISHES DATA ═══ */
@@ -799,9 +798,6 @@ function pickOpt(id,i){
     txt.innerHTML='<em style="color:var(--gold)">Scroll down for something very special… 💛</em>';
     res.style.display='block';
     cont.style.display='block';
-    // Unlock scroll
-    scr.style.overflowY='auto';
-    scr.style.pointerEvents='auto';
     setTimeout(()=>{
       const card=document.getElementById('makkah-card');
       card.style.display='block';
@@ -819,9 +815,6 @@ function pickOpt(id,i){
   txt.textContent=opt.text;
   res.style.display='block';
   cont.style.display='block';
-  // Unlock scroll
-  scr.style.overflowY='auto';
-  scr.style.pointerEvents='auto';
   boom();boom();
 }
 
@@ -838,7 +831,7 @@ function setupObservers(){
     }
   });
 
-  // Fade-in observer for wish rows (use document viewport, not scroll root)
+  // Fade-in observer for wish rows
   const wObs=new IntersectionObserver(entries=>{
     entries.forEach(e=>{
       if(e.isIntersecting){
@@ -851,33 +844,31 @@ function setupObservers(){
 
   // Scroll event — check if any popup should appear
   const popupIds=['sp1','sp2','sp3'];
+  function lockScroll(e){ e.preventDefault(); }
+
   function checkPopups(){
     popupIds.forEach(id=>{
       const popup=document.getElementById(id);
       if(!popup||popup.classList.contains('seen'))return;
       const rect=popup.getBoundingClientRect();
       const scrRect=scr.getBoundingClientRect();
-      // Show popup when it enters the scroll viewport
-      if(rect.top < scrRect.bottom - 40 && rect.bottom > scrRect.top){
+      if(rect.top < scrRect.bottom - 20){
         popup.classList.add('seen','show');
         boom();boom();
-        // Lock scroll
-        scr.style.overflowY='hidden';
-        scr.style.pointerEvents='none';
-        popup.style.pointerEvents='all';
-        // Re-enable pointer events on popup buttons
+        // Lock scroll by preventing wheel/touch
+        scr.addEventListener('wheel', lockScroll, {passive:false});
+        scr.addEventListener('touchmove', lockScroll, {passive:false});
+        // Unlock when any option picked
         popup.querySelectorAll('.sp-opt').forEach(btn=>{
-          btn.style.pointerEvents='all';
           btn.addEventListener('click',()=>{
-            scr.style.overflowY='auto';
-            scr.style.pointerEvents='auto';
+            scr.removeEventListener('wheel', lockScroll);
+            scr.removeEventListener('touchmove', lockScroll);
           },{once:true});
         });
       }
     });
   }
-  scr.addEventListener('scroll',checkPopups,{passive:true});
-  // Also check immediately in case popup is already in view
+  scr.addEventListener('scroll', checkPopups, {passive:true});
   checkPopups();
 }
 </script>
