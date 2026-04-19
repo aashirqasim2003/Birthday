@@ -31,14 +31,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
   text-align:center;padding:0 16px;
 }
 #cd-num{
-  font-family:'Cormorant Garamond',serif;font-size:clamp(7rem,20vw,17rem);font-weight:700;line-height:1;
-  background:linear-gradient(135deg,#f5e0a8 0%,#e8c97e 50%,#b8902e 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  filter:drop-shadow(0 0 60px rgba(232,201,126,0.35));
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(7rem,22vw,17rem);
+  font-weight:700;
+  line-height:1;
+  color:#e8c97e;
+  text-shadow:0 0 60px rgba(232,201,126,0.6), 0 0 120px rgba(232,201,126,0.3);
+  display:block;
+  opacity:0;
+  transform:scale(0.5);
 }
-#cd-num.pop{animation:countPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;}
 @keyframes countPop{
-  0%{transform:scale(0.2);opacity:0;}60%{transform:scale(1.18);}100%{transform:scale(1);opacity:1;}
+  0%  {opacity:0; transform:scale(0.3);}
+  50% {opacity:1; transform:scale(1.2);}
+  100%{opacity:1; transform:scale(1);}
 }
 
 /* ══════════════════════════════════════
@@ -226,42 +232,70 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
 .wi{font-size:0.88rem;min-width:20px;flex-shrink:0;}
 .wt{font-size:clamp(0.82rem,2vw,0.9rem);color:rgba(245,230,200,0.82);line-height:1.7;font-weight:300;}
 
-/* Scroll popups */
-.sp{
-  margin:20px 0;
-  background:linear-gradient(135deg,rgba(26,13,46,0.97),rgba(13,8,16,0.97));
-  border:1px solid rgba(232,201,126,0.18);padding:clamp(20px,4vw,28px) clamp(16px,4vw,24px);
-  text-align:center;
-  opacity:0;
-  pointer-events:none;
-  transform:translateY(16px);
-  transition:opacity 0.5s ease, transform 0.5s ease;
+/* ── Floating question overlay ── */
+#float-popup{
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;
+  transition:opacity 0.4s ease;
 }
-.sp.show{
-  opacity:1;
-  pointer-events:all;
-  transform:translateY(0);
+#float-popup.show{opacity:1;pointer-events:all;}
+.fp-box{
+  background:linear-gradient(135deg,#130820 0%,#1c0f30 100%);
+  border:1px solid rgba(232,201,126,0.3);
+  padding:clamp(28px,5vw,44px) clamp(22px,5vw,48px);
+  text-align:center;max-width:420px;width:100%;
+  box-shadow:0 0 80px rgba(232,201,126,0.1);
   animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
 }
-.sp-ico{font-size:clamp(1.8rem,4vw,2.4rem);margin-bottom:6px;}
-.sp-q{font-family:'Cormorant Garamond',serif;font-size:clamp(1.05rem,2.5vw,1.25rem);color:var(--gold2);margin-bottom:3px;}
-.sp-sub{font-size:clamp(0.6rem,1.5vw,0.7rem);letter-spacing:0.18em;text-transform:uppercase;
-  color:rgba(232,201,126,0.38);margin-bottom:16px;}
-.sp-opts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
-.sp-opt{
+.fp-ico{font-size:clamp(2rem,5vw,3rem);display:block;margin-bottom:10px;}
+.fp-q{font-family:'Cormorant Garamond',serif;font-size:clamp(1.15rem,3vw,1.5rem);
+  color:var(--gold2);margin-bottom:4px;font-style:italic;}
+.fp-sub{font-size:clamp(0.6rem,1.5vw,0.7rem);letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(232,201,126,0.38);margin-bottom:22px;}
+.fp-opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:0;}
+.fp-opt{
   font-family:'Cormorant Garamond',serif;font-size:clamp(0.9rem,2.2vw,1.05rem);
-  padding:clamp(8px,2vw,10px) clamp(14px,3vw,22px);
-  border:1px solid rgba(232,201,126,0.32);background:transparent;color:var(--gold);
+  padding:clamp(9px,2vw,12px) clamp(18px,4vw,28px);
+  border:1px solid rgba(232,201,126,0.35);background:transparent;color:var(--gold);
   cursor:pointer;transition:all 0.3s ease;
 }
-.sp-opt:hover{background:rgba(232,201,126,0.1);border-color:var(--gold);}
-.sp-opt:disabled{opacity:0.4;cursor:default;}
-.sp-res{display:none;margin-top:12px;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);}
-.sp-res-ico{font-size:clamp(2rem,5vw,2.8rem);}
-.sp-res-txt{font-size:clamp(0.78rem,2vw,0.85rem);color:rgba(245,224,168,0.72);
-  font-style:italic;margin-top:6px;line-height:1.75;white-space:pre-line;}
-.sp-cont{margin-top:10px;font-size:clamp(0.62rem,1.5vw,0.72rem);
-  color:rgba(232,201,126,0.3);letter-spacing:0.12em;display:none;}
+.fp-opt:hover{background:rgba(232,201,126,0.12);border-color:var(--gold);}
+
+/* Result shown after pick */
+.fp-result{
+  display:none;
+  margin-top:18px;
+  padding-top:18px;
+  border-top:1px solid rgba(232,201,126,0.12);
+  animation:popIn 0.4s ease;
+}
+.fp-result-ico{font-size:2.5rem;display:block;margin-bottom:8px;}
+.fp-result-txt{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(0.88rem,2vw,1rem);
+  font-style:italic;
+  color:rgba(245,224,168,0.88);
+  line-height:1.8;
+}
+.fp-continue{
+  display:none;margin-top:18px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(0.78rem,1.8vw,0.88rem);
+  letter-spacing:0.15em;text-transform:uppercase;
+  padding:10px 28px;
+  border:1px solid rgba(232,201,126,0.3);
+  background:rgba(232,201,126,0.08);
+  color:var(--gold);cursor:pointer;
+  transition:all 0.3s ease;
+}
+.fp-continue:hover{background:rgba(232,201,126,0.18);}
+
+/* Trigger anchors — invisible placeholders in scroll */
+.popup-trigger{height:1px;margin:0;padding:0;border:none;opacity:0;pointer-events:none;}
 
 /* ══════════════════════════════════════
    MAKKAH SPECIAL CARD
@@ -445,6 +479,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
   </div>
 </div>
 
+<!-- ══ FLOATING QUESTION POPUP ══ -->
+<div id="float-popup">
+  <div class="fp-box">
+    <span class="fp-ico" id="fp-ico"></span>
+    <p class="fp-q" id="fp-q"></p>
+    <p class="fp-sub" id="fp-sub"></p>
+    <div class="fp-opts" id="fp-opts"></div>
+    <div class="fp-result" id="fp-result">
+      <span class="fp-result-ico" id="fp-result-ico"></span>
+      <div class="fp-result-txt" id="fp-result-txt"></div>
+    </div>
+    <button class="fp-continue" id="fp-continue" onclick="closeFloatPopup()">Continue scrolling ↓</button>
+  </div>
+</div>
+
 <!-- ══ DISCLAIMER ══ -->
 <div id="disclaimer-overlay">
   <div class="disc-box">
@@ -522,15 +571,29 @@ function drawFrame(){
 drawFrame();
 
 /* ═══ COUNTDOWN ═══ */
-let cnt=6;
-const cdEl=document.getElementById('cd-num');
+const cdEl = document.getElementById('cd-num');
+let cnt = 6;
+
 function tick(){
-  cdEl.classList.remove('pop');void cdEl.offsetWidth;cdEl.classList.add('pop');
-  cdEl.textContent=cnt;cnt--;
-  if(cnt>=0)setTimeout(tick,850);
-  else setTimeout(showHero,600);
+  if (!cdEl) return;
+  cdEl.textContent = cnt;
+  // Reset animation by cloning trick
+  cdEl.style.animation = 'none';
+  cdEl.style.opacity = '0';
+  cdEl.style.transform = 'scale(0.3)';
+  // Force reflow
+  cdEl.getBoundingClientRect();
+  // Play animation
+  cdEl.style.animation = 'countPop 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards';
+  
+  cnt--;
+  if(cnt >= 1){
+    setTimeout(tick, 900);
+  } else {
+    setTimeout(showHero, 1000);
+  }
 }
-setTimeout(tick,500);
+setTimeout(tick, 500);
 
 function showHero(){
   document.getElementById('screen-countdown').style.display='none';
@@ -654,28 +717,188 @@ const wishes=[
   ["💛","Here's to you, my Nimmi — the person who changed absolutely everything for me."],
 ];
 
-const spopupsData={};
+/* ═══ FLOATING POPUP SYSTEM ═══ */
+const popupDefs = [
+  {
+    triggerIdx: 17,
+    ico:'☕', q:'These wishes are getting long…', sub:'Can I offer you something?',
+    opts:[
+      {label:'☕ Coffee',   emoji:'☕', text:'Here is your coffee — warm and perfect, just like you. Now keep reading! 💛'},
+      {label:'🍦 Ice Cream',emoji:'🍨', text:'Your ice cream is served! Keep scrolling, gorgeous. 🌸'}
+    ]
+  },
+  {
+    triggerIdx: 32,
+    ico:'🍕', q:'Still reading? You deserve a treat.', sub:"What are you having?",
+    opts:[
+      {label:'🍕 Pizza', emoji:'🍕', text:'Pizza it is! The perfect companion for reading love letters. 🍕✨'},
+      {label:'🍔 Burger',emoji:'🍔', text:'Burger incoming! Now keep reading, you. 😄🍔'}
+    ]
+  },
+  {
+    triggerIdx: 44,
+    ico:'✈️', q:'Where do you want to travel with me?', sub:'Your heart, your choice',
+    opts:[
+      {label:'🕌 Makkah',      isMakkah:true},
+      {label:'🏔️ Switzerland', emoji:'🏔️', text:'Switzerland with you — snow, silence, mountains, and your smile. InshAllah together. 🏔️✨'}
+    ]
+  }
+];
 
-function buildScrollPopup(id,ico,q,sub,opts){
-  const div=document.createElement('div');
-  div.className='sp';div.id=id;
-  spopupsData[id]=opts;
-  const oh=opts.map((o,i)=>`<button class="sp-opt" onclick="pickOpt('${id}',${i})">${o.label}</button>`).join('');
-  div.innerHTML=`
-    <div class="sp-ico">${ico}</div>
-    <p class="sp-q">${q}</p>
-    <p class="sp-sub">${sub}</p>
-    <div class="sp-opts">${oh}</div>
-    <div class="sp-res" id="${id}-res">
-      <div class="sp-res-ico" id="${id}-ico"></div>
-      <div class="sp-res-txt" id="${id}-txt"></div>
-    </div>
-    <div class="sp-cont" id="${id}-cont">keep scrolling ↓</div>
-  `;
-  return div;
+let currentPopupIdx = 0; // which popupDef is next
+let lockedScrollTop  = -1;
+
+function openFloatPopup(def){
+  const fp  = document.getElementById('float-popup');
+  document.getElementById('fp-ico').textContent  = def.ico;
+  document.getElementById('fp-q').textContent    = def.q;
+  document.getElementById('fp-sub').textContent  = def.sub;
+  document.getElementById('fp-result').style.display   = 'none';
+  document.getElementById('fp-continue').style.display = 'none';
+
+  const optsEl = document.getElementById('fp-opts');
+  optsEl.innerHTML = '';
+  def.opts.forEach((o,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'fp-opt';
+    btn.textContent = o.label;
+    btn.onclick = ()=> pickFloatOpt(def, o, i);
+    optsEl.appendChild(btn);
+  });
+
+  fp.classList.add('show');
 }
 
-function buildMakkahCard(){
+function pickFloatOpt(def, opt, i){
+  // disable all buttons
+  document.querySelectorAll('.fp-opt').forEach(b=>b.disabled=true);
+
+  if(opt.isMakkah){
+    // Show brief message then close popup and reveal Makkah card
+    const res = document.getElementById('fp-result');
+    document.getElementById('fp-result-ico').textContent = '🌙';
+    document.getElementById('fp-result-txt').innerHTML =
+      '<em style="color:var(--gold)">Something very special is waiting below… 💛</em>';
+    res.style.display = 'block';
+    boom();boom();boom();
+    setTimeout(()=>{
+      closeFloatPopup();
+      setTimeout(()=>{
+        const card = document.getElementById('makkah-card');
+        card.style.display = 'block';
+        boom();boom();boom();
+        setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),200);
+      },400);
+    },1800);
+    return;
+  }
+
+  const res = document.getElementById('fp-result');
+  document.getElementById('fp-result-ico').textContent = opt.emoji;
+  document.getElementById('fp-result-txt').textContent = opt.text;
+  res.style.display = 'block';
+  boom();boom();
+  // Show continue button after short delay
+  setTimeout(()=>{
+    document.getElementById('fp-continue').style.display = 'inline-block';
+  },800);
+}
+
+function closeFloatPopup(){
+  const fp = document.getElementById('float-popup');
+  fp.classList.remove('show');
+  lockedScrollTop = -1; // release scroll lock
+}
+
+/* ═══ BUILD WISHES ═══ */
+function buildWishes(){
+  const inner = document.getElementById('ws-inner');
+  inner.innerHTML = '';
+
+  // Intro paragraph
+  const intro = document.createElement('div');
+  intro.className = 'intro-blk w-row';
+  intro.innerHTML = `<p>Let me celebrate <span class="hl">the lizard of my life</span> — the beauty of mine, the person I love the most in this entire world, the one who matters above everyone else, the person with whom I want to spend my <em>whole life</em>. <span class="hl">Happy Birthday, Nimmi.</span> May Allah grant you a long life — one exactly as you always wished of — filled with immense barakah, overflowing blessings, and beautiful, unshakeable imaan. 🌸</p>`;
+  inner.appendChild(intro);
+
+  // Wishes — with invisible trigger anchors at popup indices
+  wishes.forEach((w,i)=>{
+    // Insert invisible trigger div at the right wish index
+    if(popupDefs.some(p=>p.triggerIdx===i)){
+      const trigger = document.createElement('div');
+      trigger.className = 'popup-trigger';
+      trigger.setAttribute('data-popup-idx', popupDefs.findIndex(p=>p.triggerIdx===i));
+      inner.appendChild(trigger);
+    }
+    const row = document.createElement('div');
+    row.className = 'w-row';
+    row.innerHTML = `<span class="wi">${w[0]}</span><span class="wt">${w[1]}</span>`;
+    inner.appendChild(row);
+  });
+
+  // Makkah card — hidden until selected
+  inner.appendChild(buildMakkahCard());
+
+  // Final block
+  const fin = document.createElement('div');
+  fin.className = 'final-blk w-row';
+  fin.innerHTML = `
+    <div class="final-ico">🎂 ✨ 💛 🌸 ⭐</div>
+    <h2>Happy Birthday, Nimmi!</h2>
+    <p>
+      Wish you the happiest of birthdays and the most wonderful, magical year ahead.<br><br>
+      Lots and lots of blessings. Mountains of happiness. Oceans of peace.<br><br>
+      May every single day ahead be brighter than the one before it.<br><br>
+      May Allah always keep you smiling — because your smile, Nimmi,<br>is my absolute favourite thing in this entire world.<br><br>
+      <strong style="color:#e8c97e">I love you. Happy Birthday. &nbsp;</strong><span class="red-heart">❤️</span>
+    </p>
+    <div class="final-ico" style="margin-top:20px">🕊️ 🌙 🌺 💫 🌟</div>
+  `;
+  inner.appendChild(fin);
+}
+
+/* ═══ SCROLL LOCK + OBSERVERS ═══ */
+function setupObservers(){
+  const scr = document.getElementById('ws-scroll');
+
+  // Immediately reveal already-visible rows
+  document.querySelectorAll('.w-row').forEach(el=>{
+    const r = el.getBoundingClientRect(), s = scr.getBoundingClientRect();
+    if(r.top < s.bottom && r.bottom > s.top) el.classList.add('vis');
+  });
+
+  // Fade-in rows as they scroll into view
+  const wObs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('vis'); wObs.unobserve(e.target); }
+    });
+  },{threshold:0.05});
+  document.querySelectorAll('.w-row:not(.vis)').forEach(el=>wObs.observe(el));
+
+  // Trigger observer — watches the invisible anchor divs
+  const triggerObs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting) return;
+      const idx = parseInt(e.target.getAttribute('data-popup-idx'));
+      if(isNaN(idx) || idx !== currentPopupIdx) return;
+      // Lock scroll at current position
+      lockedScrollTop = scr.scrollTop;
+      currentPopupIdx++;
+      triggerObs.unobserve(e.target);
+      openFloatPopup(popupDefs[idx]);
+    });
+  },{threshold:1.0, rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.popup-trigger').forEach(el=>triggerObs.observe(el));
+
+  // Enforce scroll lock on scroll event
+  scr.addEventListener('scroll',()=>{
+    if(lockedScrollTop >= 0 && scr.scrollTop > lockedScrollTop){
+      scr.scrollTop = lockedScrollTop;
+    }
+  },{passive:true});
+}
+
+function buildMakkahCard() {
   const div=document.createElement('div');
   div.className='makkah-card';div.id='makkah-card';
   div.innerHTML=`
@@ -737,148 +960,6 @@ with the most precious person in my world.</div>
   return div;
 }
 
-function buildWishes(){
-  const inner=document.getElementById('ws-inner');
-  inner.innerHTML='';
-
-  // Intro
-  const intro=document.createElement('div');
-  intro.className='intro-blk w-row';
-  intro.innerHTML=`<p>Let me celebrate <span class="hl">the lizard of my life</span> — the beauty of mine, the person I love the most in this entire world, the one who matters above everyone else, the person with whom I want to spend my <em>whole life</em>. <span class="hl">Happy Birthday, Nimmi.</span> May Allah grant you a long life — one exactly as you always wished of — filled with immense barakah, overflowing blessings, and beautiful, unshakeable imaan. 🌸</p>`;
-  inner.appendChild(intro);
-
-  // Popup defs — insert BETWEEN wishes at these indices
-  const popupAfter={
-    17: buildScrollPopup('sp1','☕','These wishes are getting long…',"Can I offer you something?",[
-      {label:'☕ Coffee',emoji:'☕',text:'Here is your coffee — warm and perfect, just like you. Now keep reading! 💛'},
-      {label:'🍦 Ice Cream',emoji:'🍨',text:'Your ice cream is served! Keep scrolling, gorgeous 🌸'}
-    ]),
-    32: buildScrollPopup('sp2','🍕','Still reading? You deserve a treat.',"What are you having?",[
-      {label:'🍕 Pizza',emoji:'🍕',text:'Pizza it is! The perfect companion for reading love letters 🍕✨'},
-      {label:'🍔 Burger',emoji:'🍔',text:'Burger incoming! Now keep reading, you 😄🍔'}
-    ]),
-    44: buildScrollPopup('sp3','✈️','Where do you want to travel with me?',"Your heart, your choice",[
-      {label:'🕌 Makkah',emoji:'',isMakkah:true,text:''},
-      {label:'🏔️ Switzerland',emoji:'🏔️',text:'Switzerland with you would be the most beautiful dream — snow, silence, mountains, and your smile. InshAllah one day, together. 🏔️✨'}
-    ]),
-  };
-
-  wishes.forEach((w,i)=>{
-    if(popupAfter[i]) inner.appendChild(popupAfter[i]);
-    const row=document.createElement('div');
-    row.className='w-row';
-    row.innerHTML=`<span class="wi">${w[0]}</span><span class="wt">${w[1]}</span>`;
-    inner.appendChild(row);
-  });
-
-  // Makkah card (hidden, revealed on selection)
-  inner.appendChild(buildMakkahCard());
-
-  // Final
-  const fin=document.createElement('div');
-  fin.className='final-blk w-row';
-  fin.innerHTML=`
-    <div class="final-ico">🎂 ✨ 💛 🌸 ⭐</div>
-    <h2>Happy Birthday, Nimmi!</h2>
-    <p>
-      Wish you the happiest of birthdays and the most wonderful, magical year ahead.<br><br>
-      Lots and lots of blessings. Mountains of happiness. Oceans of peace.<br><br>
-      May every single day ahead be brighter than the one before it.<br><br>
-      May Allah always keep you smiling — because your smile, Nimmi,<br>is my absolute favourite thing in this entire world.<br><br>
-      <strong style="color:#e8c97e">I love you. Happy Birthday. &nbsp;</strong><span class="red-heart">❤️</span>
-    </p>
-    <div class="final-ico" style="margin-top:20px">🕊️ 🌙 🌺 💫 🌟</div>
-  `;
-  inner.appendChild(fin);
-}
-
-/* ═══ PICK OPTION ═══ */
-function pickOpt(id,i){
-  const opt = spopupsData[id][i];
-  document.querySelectorAll(`#${id} .sp-opt`).forEach(b=>b.disabled=true);
-  lockedScrollTop = -1; // always release lock on pick
-
-  const res=document.getElementById(id+'-res');
-  const ico=document.getElementById(id+'-ico');
-  const txt=document.getElementById(id+'-txt');
-  const cont=document.getElementById(id+'-cont');
-
-  if(opt.isMakkah){
-    ico.innerHTML='🌙';
-    txt.innerHTML='<em style="color:var(--gold)">Scroll down for something very special… 💛</em>';
-    res.style.display='block'; cont.style.display='block';
-    setTimeout(()=>{
-      const card=document.getElementById('makkah-card');
-      card.style.display='block';
-      boom();boom();boom();
-      setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),200);
-    },600);
-    return;
-  }
-
-  ico.textContent=opt.emoji;
-  txt.textContent=opt.text;
-  res.style.display='block'; cont.style.display='block';
-  boom(); boom();
-}
-
-/* ═══ SCROLL LOCK + OBSERVERS ═══ */
-let lockedScrollTop = -1;
-
-function setupObservers(){
-  const scr = document.getElementById('ws-scroll');
-
-  // Make already-visible rows show immediately
-  document.querySelectorAll('.w-row').forEach(el=>{
-    const r=el.getBoundingClientRect(), s=scr.getBoundingClientRect();
-    if(r.top < s.bottom && r.bottom > s.top) el.classList.add('vis');
-  });
-
-  // Fade in rows as user scrolls
-  const wObs = new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){ e.target.classList.add('vis'); wObs.unobserve(e.target); }
-    });
-  },{threshold:0.05});
-  document.querySelectorAll('.w-row:not(.vis)').forEach(el=>wObs.observe(el));
-
-  // Snap scroll back if locked
-  scr.addEventListener('scroll', ()=>{
-    // Check popups on every scroll
-    checkAndShowPopups();
-    // Enforce lock
-    if(lockedScrollTop >= 0 && scr.scrollTop > lockedScrollTop){
-      scr.scrollTop = lockedScrollTop;
-    }
-  }, {passive:true});
-
-  // Also check immediately in case already scrolled
-  checkAndShowPopups();
-}
-
-function checkAndShowPopups(){
-  const scr = document.getElementById('ws-scroll');
-  const scrRect = scr.getBoundingClientRect();
-
-  ['sp1','sp2','sp3'].forEach(id=>{
-    const popup = document.getElementById(id);
-    if(!popup || popup.classList.contains('seen')) return;
-    const rect = popup.getBoundingClientRect();
-    // Show when popup top comes within the visible scroll area
-    if(rect.top < scrRect.bottom - 10){
-      popup.classList.add('seen','show');
-      boom(); boom();
-      // Lock scroll at current position
-      lockedScrollTop = scr.scrollTop;
-      // Unlock on option pick
-      popup.querySelectorAll('.sp-opt').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          lockedScrollTop = -1;
-        }, {once:true});
-      });
-    }
-  });
-}
 </script>
 </body>
 </html>
