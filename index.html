@@ -231,9 +231,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
   margin:20px 0;
   background:linear-gradient(135deg,rgba(26,13,46,0.97),rgba(13,8,16,0.97));
   border:1px solid rgba(232,201,126,0.18);padding:clamp(20px,4vw,28px) clamp(16px,4vw,24px);
-  text-align:center;display:none;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(16px);
+  transition:opacity 0.5s ease, transform 0.5s ease;
 }
-.sp.show{display:block;}
+.sp.show{
+  opacity:1;
+  pointer-events:all;
+  transform:translateY(0);
+  animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
 .sp-ico{font-size:clamp(1.8rem,4vw,2.4rem);margin-bottom:6px;}
 .sp-q{font-family:'Cormorant Garamond',serif;font-size:clamp(1.05rem,2.5vw,1.25rem);color:var(--gold2);margin-bottom:3px;}
 .sp-sub{font-size:clamp(0.6rem,1.5vw,0.7rem);letter-spacing:0.18em;text-transform:uppercase;
@@ -447,7 +456,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--dark);
       <strong style="color:var(--gold)">The last one is the most special of all.</strong> 💛
     </div>
     <div class="disc-note">✨ &nbsp; scroll until the very end &nbsp; ✨</div>
-    <button class="disc-btn" onclick="startWishes()">Got it, Let's Go 🌸</button>
+    <button class="disc-btn" onclick="startWishes()">I Promise, Let's Go 🌸</button>
   </div>
 </div>
 
@@ -785,19 +794,19 @@ function buildWishes(){
 
 /* ═══ PICK OPTION ═══ */
 function pickOpt(id,i){
-  const scr=document.getElementById('ws-scroll');
-  const opt=spopupsData[id][i];
+  const opt = spopupsData[id][i];
   document.querySelectorAll(`#${id} .sp-opt`).forEach(b=>b.disabled=true);
+  lockedScrollTop = -1; // always release lock on pick
+
+  const res=document.getElementById(id+'-res');
+  const ico=document.getElementById(id+'-ico');
+  const txt=document.getElementById(id+'-txt');
+  const cont=document.getElementById(id+'-cont');
 
   if(opt.isMakkah){
-    const res=document.getElementById(id+'-res');
-    const ico=document.getElementById(id+'-ico');
-    const txt=document.getElementById(id+'-txt');
-    const cont=document.getElementById(id+'-cont');
     ico.innerHTML='🌙';
     txt.innerHTML='<em style="color:var(--gold)">Scroll down for something very special… 💛</em>';
-    res.style.display='block';
-    cont.style.display='block';
+    res.style.display='block'; cont.style.display='block';
     setTimeout(()=>{
       const card=document.getElementById('makkah-card');
       card.style.display='block';
@@ -807,69 +816,68 @@ function pickOpt(id,i){
     return;
   }
 
-  const res=document.getElementById(id+'-res');
-  const ico=document.getElementById(id+'-ico');
-  const txt=document.getElementById(id+'-txt');
-  const cont=document.getElementById(id+'-cont');
   ico.textContent=opt.emoji;
   txt.textContent=opt.text;
-  res.style.display='block';
-  cont.style.display='block';
-  boom();boom();
+  res.style.display='block'; cont.style.display='block';
+  boom(); boom();
 }
 
 /* ═══ SCROLL LOCK + OBSERVERS ═══ */
-function setupObservers(){
-  const scr=document.getElementById('ws-scroll');
+let lockedScrollTop = -1;
 
-  // Immediately make already-visible .w-row elements visible
+function setupObservers(){
+  const scr = document.getElementById('ws-scroll');
+
+  // Make already-visible rows show immediately
   document.querySelectorAll('.w-row').forEach(el=>{
-    const rect=el.getBoundingClientRect();
-    const scrRect=scr.getBoundingClientRect();
-    if(rect.top < scrRect.bottom && rect.bottom > scrRect.top){
-      el.classList.add('vis');
-    }
+    const r=el.getBoundingClientRect(), s=scr.getBoundingClientRect();
+    if(r.top < s.bottom && r.bottom > s.top) el.classList.add('vis');
   });
 
-  // Fade-in observer for wish rows
-  const wObs=new IntersectionObserver(entries=>{
+  // Fade in rows as user scrolls
+  const wObs = new IntersectionObserver(entries=>{
     entries.forEach(e=>{
-      if(e.isIntersecting){
-        setTimeout(()=>e.target.classList.add('vis'),60);
-        wObs.unobserve(e.target);
-      }
+      if(e.isIntersecting){ e.target.classList.add('vis'); wObs.unobserve(e.target); }
     });
-  },{threshold:0.08});
+  },{threshold:0.05});
   document.querySelectorAll('.w-row:not(.vis)').forEach(el=>wObs.observe(el));
 
-  // Scroll event — check if any popup should appear
-  const popupIds=['sp1','sp2','sp3'];
-  function lockScroll(e){ e.preventDefault(); }
+  // Snap scroll back if locked
+  scr.addEventListener('scroll', ()=>{
+    // Check popups on every scroll
+    checkAndShowPopups();
+    // Enforce lock
+    if(lockedScrollTop >= 0 && scr.scrollTop > lockedScrollTop){
+      scr.scrollTop = lockedScrollTop;
+    }
+  }, {passive:true});
 
-  function checkPopups(){
-    popupIds.forEach(id=>{
-      const popup=document.getElementById(id);
-      if(!popup||popup.classList.contains('seen'))return;
-      const rect=popup.getBoundingClientRect();
-      const scrRect=scr.getBoundingClientRect();
-      if(rect.top < scrRect.bottom - 20){
-        popup.classList.add('seen','show');
-        boom();boom();
-        // Lock scroll by preventing wheel/touch
-        scr.addEventListener('wheel', lockScroll, {passive:false});
-        scr.addEventListener('touchmove', lockScroll, {passive:false});
-        // Unlock when any option picked
-        popup.querySelectorAll('.sp-opt').forEach(btn=>{
-          btn.addEventListener('click',()=>{
-            scr.removeEventListener('wheel', lockScroll);
-            scr.removeEventListener('touchmove', lockScroll);
-          },{once:true});
-        });
-      }
-    });
-  }
-  scr.addEventListener('scroll', checkPopups, {passive:true});
-  checkPopups();
+  // Also check immediately in case already scrolled
+  checkAndShowPopups();
+}
+
+function checkAndShowPopups(){
+  const scr = document.getElementById('ws-scroll');
+  const scrRect = scr.getBoundingClientRect();
+
+  ['sp1','sp2','sp3'].forEach(id=>{
+    const popup = document.getElementById(id);
+    if(!popup || popup.classList.contains('seen')) return;
+    const rect = popup.getBoundingClientRect();
+    // Show when popup top comes within the visible scroll area
+    if(rect.top < scrRect.bottom - 10){
+      popup.classList.add('seen','show');
+      boom(); boom();
+      // Lock scroll at current position
+      lockedScrollTop = scr.scrollTop;
+      // Unlock on option pick
+      popup.querySelectorAll('.sp-opt').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          lockedScrollTop = -1;
+        }, {once:true});
+      });
+    }
+  });
 }
 </script>
 </body>
